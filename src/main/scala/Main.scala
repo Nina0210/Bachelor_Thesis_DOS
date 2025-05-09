@@ -3,74 +3,83 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
 object Main {
+
   def main(args: Array[String]): Unit = {
-    println("Hello world!")
+    println("Starting Simple PageRank Application")
 
-    println("Starting Simple GraphX App")
-
-    // 1. Create a SparkSession (the entry point for Spark applications)
-    // .master("local[*]") runs Spark locally using all available cores
     val spark = SparkSession.builder
-      .appName("SimpleGraphXApp")
-      //.master("local[*]") // Run locally
-      // Optional: Add config options if needed
-      // .config("spark.driver.memory", "2g")
+      .appName("SimplePageRankApp")
+      // For running locally in IntelliJ without a separate cluster:
+       .master("local[*]")
+      // For submitting to your standalone cluster, remove/comment .master()
       .getOrCreate()
 
-    // Get the SparkContext from the SparkSession
     val sc = spark.sparkContext
     sc.setLogLevel("WARN") // Reduce verbose Spark logging
 
-    // 2. Create example data: Vertices (ID, Attribute) and Edges (SrcID, DstID, Attribute)
-    val users: RDD[(VertexId, (String, String))] =
-      sc.parallelize(Seq(
-        (3L, ("rxin", "student")), (7L, ("jgonzal", "postdoc")),
-        (5L, ("franklin", "prof")), (2L, ("istoica", "prof"))
-      ))
+    // 1. Define Vertices: (VertexID, VertexAttribute - e.g., a name)
+    //    Let's use simple names for our pages/nodes.
+    val vertices: RDD[(VertexId, String)] = sc.parallelize(Seq(
+      (1L, "A"), (2L, "B"), (3L, "C"),
+      (4L, "D"), (5L, "E")
+    ))
 
-    val relationships: RDD[Edge[String]] =
-      sc.parallelize(Seq(
-        Edge(3L, 7L, "collab"), Edge(5L, 3L, "advisor"),
-        Edge(2L, 5L, "colleague"), Edge(5L, 7L, "pi")
-      ))
+    // 2. Define Edges: Edge(SourceVertexID, DestinationVertexID, EdgeAttribute - can be anything, even 1)
+    //    These represent links between pages.
+    val edges: RDD[Edge[Int]] = sc.parallelize(Seq(
+      Edge(1L, 2L, 1), Edge(1L, 3L, 1), // A links to B and C
+      Edge(2L, 3L, 1),                 // B links to C
+      Edge(3L, 1L, 1),                 // C links to A (creating a cycle)
+      Edge(3L, 4L, 1),                 // C links to D
+      Edge(4L, 5L, 1),                 // D links to E
+      Edge(5L, 4L, 1)                  // E links to D (another cycle)
+    ))
 
-    // Define a default user in case relationships reference missing users
-    val defaultUser = ("John Doe", "Missing")
+    // 3. Create the Graph
+    //    If a vertex is referenced in edges but not in vertices, a default attribute will be used.
+    //    Let's define a default attribute for such cases.
+    val defaultVertexAttr = "Unknown Page"
+    val graph = Graph(vertices, edges, defaultVertexAttr)
 
-    // 3. Build the initial Graph
-    val graph = Graph(users, relationships, defaultUser)
+    println(s"\nOriginal Graph has ${graph.numVertices} vertices and ${graph.numEdges} edges.")
+    println("Vertices:")
+    graph.vertices.collect().sortBy(_._1).foreach(println)
+    println("Edges:")
+    graph.edges.collect().foreach(println)
 
-    println(s"\nGraph has ${graph.numVertices} vertices and ${graph.numEdges} edges.")
+    // 4. Run PageRank
+    //    .pageRank(tolerance, resetProbability)
+    //    tolerance: The PageRank algorithm iterates until scores converge.
+    //               This is the tolerance for convergence (e.g., 0.001).
+    //               A smaller value means more iterations but higher accuracy.
+    //    resetProbability: The probability of a random jump (damping factor), typically 0.15.
+    //                      This means 1 - resetProbability (0.85) is the probability of following a link.
+    val tolerance = 0.001
+    val resetProb = 0.15
+    val pageRankGraph: Graph[Double, Double] = graph.pageRank(tol = tolerance, resetProb = resetProb)
 
-    // 4. Perform some basic GraphX operations
-    println("\nVertices where attribute is 'prof':")
-    graph.vertices.filter { case (id, (name, pos)) => pos == "prof" }.collect().foreach {
-      case (id, (name, pos)) => println(s"  $name (ID: $id) is a $pos")
+    // The pageRankGraph now has vertex attributes as their PageRank scores
+    // and edge attributes as normalized weights (contribution of src to dst PageRank).
+
+    println(s"\nPageRank Scores (Tolerance: $tolerance, Reset Probability: $resetProb):")
+
+    // Join PageRank scores with original vertex names for better readability
+    val ranksWithNames = graph.vertices.join(pageRankGraph.vertices)
+      .map { case (id, (name, rank)) => (name, rank) }
+      .sortBy(_._2, ascending = false) // Sort by rank descending
+
+    ranksWithNames.collect().foreach { case (name, rank) =>
+      println(f"  Page '$name%s' has PageRank: $rank%.4f") // Format rank to 4 decimal places
     }
 
-    println("\nEdges where the relationship is 'advisor':")
-    graph.edges.filter(_.attr == "advisor").collect().foreach { edge =>
-      println(s"  Edge from ${edge.srcId} to ${edge.dstId} is type ${edge.attr}")
-    }
+    // You can also inspect the edge attributes if interested
+    // println("\nPageRank Edge Weights:")
+    // pageRankGraph.edges.collect().foreach(edge =>
+    //   println(s"  Edge from ${edge.srcId} to ${edge.dstId} has weight: ${edge.attr}%.4f")
+    // )
 
-    println("\nTriplets (Source Vertex -> Edge -> Destination Vertex):")
-    graph.triplets.collect().foreach { triplet =>
-      println(s"  ${triplet.srcAttr._1} (${triplet.srcAttr._2}) --[${triplet.attr}]--> ${triplet.dstAttr._1} (${triplet.dstAttr._2})")
-    }
-
-    // Example: Count degrees
-    println("\nVertex Degrees (in, out, total):")
-    graph.degrees.join(graph.inDegrees).join(graph.outDegrees)
-      .join(graph.vertices) // Join with vertices to get names
-      .map { case (id, (((totalDeg, inDeg), outDeg), (name, pos))) =>
-        s"  $name (ID: $id): In=$inDeg, Out=$outDeg, Total=$totalDeg"
-      }
-      .collect().foreach(println)
-
-
-    // 5. Stop the SparkSession
+    // 5. Stop SparkSession
     println("\nStopping Spark Session.")
     spark.stop()
-
   }
 }
