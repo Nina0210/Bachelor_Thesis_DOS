@@ -7,7 +7,7 @@ import scala.io.Source
 
 object SimpleGraphXApp {
   def main(args: Array[String]): Unit = {
-    println("Hello world!")
+    println("Hello world 5!")
 
     println("Starting Simple GraphX App")
 
