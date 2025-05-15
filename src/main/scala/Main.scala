@@ -10,7 +10,7 @@ object Main {
     val spark = SparkSession.builder
       .appName("SimplePageRankApp")
       // For running locally in IntelliJ without a separate cluster:
-       .master("local[*]")
+       //.master("local[*]")
       // For submitting to your standalone cluster, remove/comment .master()
       .getOrCreate()
 
