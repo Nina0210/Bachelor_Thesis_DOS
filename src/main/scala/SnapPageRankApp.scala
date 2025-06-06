@@ -25,7 +25,7 @@ object SnapPageRankApp {
     // main entry point for spark functionality
     val spark = SparkSession.builder
       .appName("SnapPageRankApp")
-      .master("local[*]")
+      //.master("local[*]")
       .getOrCreate()
 
     val sc = spark.sparkContext // spark context, used to create RDD's
