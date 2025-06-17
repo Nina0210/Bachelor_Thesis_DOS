@@ -1,23 +1,32 @@
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import scala.util.Random
+import scala.concurrent.duration._
 
 object MonteCarloPageRankApp {
 
   def main(args: Array[String]): Unit = {
     println("Starting Monte Carlo PageRank Application")
 
+    val applicationSTartTime = System.nanoTime()
+
     // Configuration
     val edgeListFilePath: String = if (args.length > 0) args(0) else {
       println("WARN: No edge list file path provided. Using default path.")
       // default path
-      "/tmp/wiki-Vote.txt"
+      "/tmp/wiki-Talk.txt"
     }
 
     val numWalkersPerNodeFactor = 10
     val numSteps = 30
     val resetProb = 0.15
     val topNToDisplay = 20
+
+    println("----- Configurations -----")
+    println(s"Number of walker per node: ${numWalkersPerNodeFactor}r")
+    println(s"Number of steps: $numSteps")
+    println(s"Reset probability: $resetProb")
+
 
 
     val spark = SparkSession.builder
@@ -130,6 +139,11 @@ object MonteCarloPageRankApp {
     topRanks.foreach { case (vertexId, rank) =>
       println(f"  Vertex ID: $vertexId%-10s Approx. PageRank: $rank%.6f")
     }
+
+    val applicationEndTime = System.nanoTime()
+    val totalRuntimeNanos = applicationEndTime - applicationSTartTime
+    val totalRuntimeSeconds = totalRuntimeNanos/1e9d
+    println(f"Total Application Runtime: $totalRuntimeSeconds seconds")
 
     // Stop SparkSession
     println("\nStopping Spark Session.")

@@ -8,6 +8,7 @@ object SnapPageRankApp {
   def main(args: Array[String]): Unit = {
     println("Starting SNAP PageRank App")
 
+    val applicationSTartTime = System.nanoTime()
 
     val edgeListFilePath: String = if (args.length > 0) args(0) else {
       println("WARN: No edge list file path provided as a command-line argument.")
@@ -18,6 +19,10 @@ object SnapPageRankApp {
     val tolerance = 0.001
     val resetProb = 0.15
     val topNUsersToShow = 20
+
+    println("----- Configurations -----")
+    println(s"Tolerance: $tolerance")
+    println(s"Reset probability: $resetProb")
 
     val spark = SparkSession.builder
       .appName("SnapPageRankApp")
@@ -71,6 +76,11 @@ object SnapPageRankApp {
     topRanks.foreach { case (vertexId, rank) =>
     println(f"  Vertex ID: $vertexId%-10s PageRank: $rank%.6f")
     }
+
+    val applicationEndTime = System.nanoTime()
+    val totalRunTimeNanos = applicationEndTime - applicationSTartTime
+    val totalRuntimeSeconds = totalRunTimeNanos / 1e9
+    println(f"Total Application Runtime: $totalRuntimeSeconds seconds")
 
     // stop spark session
     println("\nStopping Spark Session.")
