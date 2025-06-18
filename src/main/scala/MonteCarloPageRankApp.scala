@@ -23,7 +23,7 @@ object MonteCarloPageRankApp {
     val topNToDisplay = 20
 
     println("----- Configurations -----")
-    println(s"Number of walker per node: ${numWalkersPerNodeFactor}r")
+    println(s"Number of walker per node: $numWalkersPerNodeFactor")
     println(s"Number of steps: $numSteps")
     println(s"Reset probability: $resetProb")
 

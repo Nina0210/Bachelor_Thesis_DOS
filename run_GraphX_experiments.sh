@@ -8,7 +8,7 @@ HDFS_INPUT_FILE="/tmp/wiki-Talk.txt"
 
 OUTPUT_CSV="GraphX_performance_data.csv"
 
-MEMORY_CONFIGS="400m 500m 700m 1g 1300m 1500m 1700m 2g"
+MEMORY_CONFIGS="450m 700m 1000m 1500m 2000m"
 
 echo "Starting performance experiments..."
 echo "Using JAR: $SPARK_APP_JAR"
@@ -19,11 +19,11 @@ for mem in $MEMORY_CONFIGS; do
   echo "-----------------------------------------------------"
   echo "RUNNING EXPERIMENT with Executor Memory: $mem"
   echo "-----------------------------------------------------"
-  log_file="run_log_${mem}.txt"
+  log_file="GX_run_log_${mem}.txt"
 
   spark-submit \
     --class $SPARK_APP_CLASS \
-    --master spark://ninamac.fritz.box:7077 \
+    --master spark://eduroam-141-23-218-205.wlan.tu-berlin.de:7077 \
     --name "Demo-Experiment-$mem" \
     --deploy-mode client \
     --driver-memory 1g \
@@ -38,6 +38,11 @@ for mem in $MEMORY_CONFIGS; do
 
   if [ $? -ne 0 ]; then
       echo "ERROR: Spark job failed for memory config $mem. Check $log_file for details."
+      continue
+  fi
+
+  if grep -q "Task failed" "$log_file" || grep -q "Exception" "$log_file" || grep -q "OutOfMemoryError" "$log_file"; then
+      echo "ERROR: Detected task failure in job for memory config $mem. Check $log_file."
       continue
   fi
 

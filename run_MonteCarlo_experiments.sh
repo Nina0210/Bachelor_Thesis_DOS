@@ -8,7 +8,7 @@ HDFS_INPUT_FILE="/tmp/wiki-Talk.txt"
 
 OUTPUT_CSV="MonteCarlo_performance_data.csv"
 
-MEMORY_CONFIGS="400m 500m 700m 1g 1300m 1500m 1700m 2g"
+MEMORY_CONFIGS="450m 700m 1000m 1500m 2000m"
 
 echo "Starting performance experiments..."
 echo "Using JAR: $SPARK_APP_JAR"
@@ -20,7 +20,7 @@ for mem in $MEMORY_CONFIGS; do
   echo "-----------------------------------------------------"
   echo "RUNNING EXPERIMENT with Executor Memory: $mem"
   echo "-----------------------------------------------------"
-  log_file="run_log_${mem}.txt"
+  log_file="MonteCarlo_run_log_${mem}.txt"
 
   spark-submit \
     --class $SPARK_APP_CLASS \
