@@ -1,6 +1,7 @@
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
+import java.io.PrintWriter
 
 
 object SnapPageRankApp {
@@ -73,9 +74,13 @@ object SnapPageRankApp {
       .sortBy(_._2, ascending = false)
       .take(topNUsersToShow)
 
+
     topRanks.foreach { case (vertexId, rank) =>
     println(f"  Vertex ID: $vertexId%-10s PageRank: $rank%.6f")
+      //writer.println(s"$vertexId,$rank")
     }
+
+    //writer.close()
 
     val applicationEndTime = System.nanoTime()
     val totalRunTimeNanos = applicationEndTime - applicationSTartTime

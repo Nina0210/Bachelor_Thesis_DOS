@@ -1,7 +1,7 @@
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import scala.util.Random
-import scala.concurrent.duration._
+import java.io.PrintWriter
 
 object MonteCarloPageRankApp {
 
@@ -17,13 +17,13 @@ object MonteCarloPageRankApp {
       "/tmp/wiki-Talk.txt"
     }
 
-    val numWalkersPerNodeFactor = 10
-    val numSteps = 30
+    val numWalkersPerNodeFactor = 1
+    val numSteps = 5
     val resetProb = 0.15
     val topNToDisplay = 20
 
     println("----- Configurations -----")
-    println(s"Number of walker per node: $numWalkersPerNodeFactor")
+    println(s"Number of walkers per node: $numWalkersPerNodeFactor")
     println(s"Number of steps: $numSteps")
     println(s"Reset probability: $resetProb")
 
@@ -136,9 +136,14 @@ object MonteCarloPageRankApp {
       .sortBy(_._2, ascending = false)
       .take(topNToDisplay)
 
+
+
     topRanks.foreach { case (vertexId, rank) =>
       println(f"  Vertex ID: $vertexId%-10s Approx. PageRank: $rank%.6f")
+      //writer.println(s"$vertexId,$rank")
     }
+
+    //writer.close()*/
 
     val applicationEndTime = System.nanoTime()
     val totalRuntimeNanos = applicationEndTime - applicationSTartTime

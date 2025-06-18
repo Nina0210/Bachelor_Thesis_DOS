@@ -6,9 +6,9 @@ SPARK_APP_CLASS="SnapPageRankApp"
 
 HDFS_INPUT_FILE="/tmp/wiki-Talk.txt"
 
-OUTPUT_CSV="GraphX_performance_data.csv"
+OUTPUT_CSV="output/csv_files/GraphX_performance_data.csv"
 
-MEMORY_CONFIGS="450m 700m 1000m 1500m 2000m"
+MEMORY_CONFIGS="450m 700m 1000m 1300m 1500m 2000m"
 
 echo "Starting performance experiments..."
 echo "Using JAR: $SPARK_APP_JAR"
@@ -19,6 +19,8 @@ for mem in $MEMORY_CONFIGS; do
   echo "-----------------------------------------------------"
   echo "RUNNING EXPERIMENT with Executor Memory: $mem"
   echo "-----------------------------------------------------"
+  RANK_CSV="output/csv_files/GX_top_20_ranks_$mem.csv"
+  echo "VertexID,Rank" > $RANK_CSV
   log_file="GX_run_log_${mem}.txt"
 
   spark-submit \
@@ -50,9 +52,13 @@ for mem in $MEMORY_CONFIGS; do
 
   mem_val=$(echo $mem | sed 's/[gGmM]//')
 
+  vertexId=$(grep "Vertex ID: " $log_file | sed -E 's/.*Vertex ID: ([0-9]+).*PageRank: ([0-9]+),([0-9]+)/\1,0.\2\3/')
+
+
   if [ -n "$runtime" ]; then
     echo "Found runtime: $runtime seconds."
     echo "$mem_val,$runtime" >> $OUTPUT_CSV
+    echo "$vertexId" >> $RANK_CSV
   else
     echo "WARNING: Could not find runtime in log file: $log_file"
   fi

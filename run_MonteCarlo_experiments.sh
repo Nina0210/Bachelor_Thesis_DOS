@@ -6,25 +6,30 @@ SPARK_APP_CLASS="MonteCarloPageRankApp"
 
 HDFS_INPUT_FILE="/tmp/wiki-Talk.txt"
 
-OUTPUT_CSV="MonteCarlo_performance_data.csv"
+OUTPUT_CSV="output/csv_files/MonteCarlo_performance_data.csv"
 
-MEMORY_CONFIGS="450m 700m 1000m 1500m 2000m"
+MEMORY_CONFIGS="450m 700m 1000m 1300m 1500m 2000m"
+
+CONFIGS_CSV="output/csv_files/MC_configs.csv"
 
 echo "Starting performance experiments..."
 echo "Using JAR: $SPARK_APP_JAR"
 echo "Using Class: $SPARK_APP_CLASS"
-echo "numWalkers,numSteps,resetProb" > $OUTPUT_CSV
+#echo "numWalkers,numSteps,resetProb" > $OUTPUT_CSV
 echo "memory_mb,runtime_sec" > $OUTPUT_CSV
+echo "numWalkers,numSteps,resetProb" > $CONFIGS_CSV
 
 for mem in $MEMORY_CONFIGS; do
   echo "-----------------------------------------------------"
   echo "RUNNING EXPERIMENT with Executor Memory: $mem"
   echo "-----------------------------------------------------"
+  RANK_CSV="output/csv_files/MC_top_20_ranks_$mem.csv"
+  echo "VertexID,Rank" > $RANK_CSV
   log_file="MonteCarlo_run_log_${mem}.txt"
 
   spark-submit \
     --class $SPARK_APP_CLASS \
-    --master spark://ninamac.fritz.box:7077 \
+    --master spark://eduroam-141-23-218-205.wlan.tu-berlin.de:7077 \
     --name "Demo-Experiment-$mem" \
     --deploy-mode client \
     --driver-memory 1g \
@@ -46,14 +51,22 @@ for mem in $MEMORY_CONFIGS; do
 
   mem_val=$(echo $mem | sed 's/[gGmM]//')
 
+  vertexId=$(grep "Vertex ID: " $log_file | sed -E 's/.*Vertex ID: ([0-9]+).*PageRank: ([0-9]+),([0-9]+)/\1,\2.\3/')
+
   if [ -n "$runtime" ]; then
     echo "Found runtime: $runtime seconds."
     echo "$mem_val,$runtime" >> $OUTPUT_CSV
+    echo "$vertexId" >> $RANK_CSV
   else
     echo "WARNING: Could not find runtime in log file: $log_file"
   fi
 done
 
+num_walkers=$(grep "Number of walkers per node: " "$log_file" | awk -F': ' '{print $2}')
+num_steps=$(grep "Number of steps: " "$log_file" | awk -F': ' '{print $2}')
+reset_prob=$(grep "Reset probability: " "$log_file" | awk -F': ' '{print $2}')
+
+echo "$num_walkers,$num_steps,$reset_prob" >> $CONFIGS_CSV
 echo "-----------------------------------------------------"
 echo "All experiments complete. Data saved to $OUTPUT_CSV"
 cat $OUTPUT_CSV
