@@ -8,7 +8,7 @@ HDFS_INPUT_FILE="/tmp/wiki-Talk.txt"
 
 OUTPUT_CSV="output/csv_files/GraphX_performance_data.csv"
 
-MEMORY_CONFIGS="450m 700m 1000m 1300m 1500m 2000m"
+MEMORY_CONFIGS="1000m"
 
 echo "Starting performance experiments..."
 echo "Using JAR: $SPARK_APP_JAR"
