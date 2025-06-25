@@ -51,7 +51,7 @@ plt.ylabel('Total Runtime (seconds)')
 
 plt.grid(True)
 
-plt.legend()
+#plt.legend()
 
 output_image_file = 'output/plots/memory_vs_runtime_v4.png'
 plt.savefig(output_image_file)

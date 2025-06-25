@@ -18,7 +18,7 @@ object MonteCarloPageRankApp {
     }
 
     val numWalkersPerNodeFactor = 1
-    val numSteps = 5
+    val numSteps = 35
     val resetProb = 0.15
     val topNToDisplay = 20
 
