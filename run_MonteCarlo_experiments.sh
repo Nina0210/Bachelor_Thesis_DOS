@@ -6,11 +6,13 @@ SPARK_APP_CLASS="MonteCarloPageRankApp"
 
 HDFS_INPUT_FILE="/tmp/wiki-Talk.txt"
 
-OUTPUT_CSV="output/csv_files/MonteCarlo_performance_data.csv"
+OUTPUT_CSV="output/csv_files/MonteCarlo_performance_data_v3.csv"
 
-MEMORY_CONFIGS="1000m"
+MEMORY_CONFIGS="450m 700m 1000m 1500m 2000m"
 
 CONFIGS_CSV="output/csv_files/MC_configs.csv"
+
+#OUTPUT_DIR="output/csv"
 
 echo "Starting performance experiments..."
 echo "Using JAR: $SPARK_APP_JAR"
@@ -23,19 +25,19 @@ for mem in $MEMORY_CONFIGS; do
   echo "-----------------------------------------------------"
   echo "RUNNING EXPERIMENT with Executor Memory: $mem"
   echo "-----------------------------------------------------"
-  RANK_CSV="output/csv_files/MC_top_20_ranks_v6_$mem.csv"
-  echo "VertexID,Rank" > $RANK_CSV
+  #RANK_CSV="output/csv_files/MC_top_20_ranks_$mem.csv"
+  #echo "VertexID,Rank" > $RANK_CSV
   log_file="MonteCarlo_run_log_${mem}.txt"
 
   spark-submit \
     --class $SPARK_APP_CLASS \
-    --master spark://eduroam-141-23-218-205.wlan.tu-berlin.de:7077 \
+    --master spark://borrasca-ubu.eecsit.tu-berlin.de:7077 \
     --name "Demo-Experiment-$mem" \
     --deploy-mode client \
     --driver-memory 1g \
     --num-executors 1 \
     --executor-cores 2 \
-    --executor-memory $mem \
+    --executor-memory "$mem" \
     --driver-java-options "--add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED" \
     --conf spark.executor.extraJavaOptions="--add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED" \
     $SPARK_APP_JAR \
@@ -56,7 +58,7 @@ for mem in $MEMORY_CONFIGS; do
   if [ -n "$runtime" ]; then
     echo "Found runtime: $runtime seconds."
     echo "$mem_val,$runtime" >> $OUTPUT_CSV
-    echo "$vertexId" >> $RANK_CSV
+    #echo "$vertexId" >> $RANK_CSV
   else
     echo "WARNING: Could not find runtime in log file: $log_file"
   fi

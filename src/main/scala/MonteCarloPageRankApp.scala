@@ -1,6 +1,7 @@
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import scala.util.Random
+import java.util.Scanner
 import java.io.PrintWriter
 
 object MonteCarloPageRankApp {
@@ -8,7 +9,7 @@ object MonteCarloPageRankApp {
   def main(args: Array[String]): Unit = {
     println("Starting Monte Carlo PageRank Application")
 
-    val applicationSTartTime = System.nanoTime()
+    //val applicationSTartTime = System.nanoTime()
 
     // Configuration
     val edgeListFilePath: String = if (args.length > 0) args(0) else {
@@ -17,10 +18,27 @@ object MonteCarloPageRankApp {
       "/tmp/wiki-Talk.txt"
     }
 
-    val numWalkersPerNodeFactor = 1
-    val numSteps = 35
+    val scanner = new Scanner(System.in)
+
+    println("Enter number of walkers per node:")
+    val numWalkersPerNodeFactor =
+      if (scanner.hasNextInt()) scanner.nextInt()
+      else {
+        println("Using default value: 5")
+        5
+      }
+
+    println("Enter number of steps:")
+    val numSteps =
+      if (scanner.hasNextInt()) scanner.nextInt()
+     else {
+        println("Using default value: 10")
+        10
+    }
     val resetProb = 0.15
     val topNToDisplay = 20
+
+    val applicationSTartTime = System.nanoTime()
 
     println("----- Configurations -----")
     println(s"Number of walkers per node: $numWalkersPerNodeFactor")
@@ -152,6 +170,7 @@ object MonteCarloPageRankApp {
 
     // Stop SparkSession
     println("\nStopping Spark Session.")
+    //broadcastNodes.unpersist(blocking=true)
     if(walkersRDD != null) walkersRDD.unpersist(blocking = true)
     if (adjList != null) adjList.unpersist(blocking = true)
     spark.stop()

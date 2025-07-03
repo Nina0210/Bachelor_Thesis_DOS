@@ -25,7 +25,7 @@ for mem in $MEMORY_CONFIGS; do
 
   spark-submit \
     --class $SPARK_APP_CLASS \
-    --master spark://eduroam-141-23-218-205.wlan.tu-berlin.de:7077 \
+    --master spark://eduroam-141-23-203-101.wlan.tu-berlin.de:7077 \
     --name "Demo-Experiment-$mem" \
     --deploy-mode client \
     --driver-memory 1g \

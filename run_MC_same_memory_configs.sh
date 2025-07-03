@@ -8,9 +8,15 @@ HDFS_INPUT_FILE="/tmp/wiki-Talk.txt"
 
 OUTPUT_CSV="output/csv_files/MonteCarlo_performance_data.csv"
 
+TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+
+OUTPUT_DIR="output/csv_files/run_${TIMESTAMP}"
+
 MEMORY_CONFIGS="1000m"
 
-CONFIGS_CSV="output/csv_files/MC_configs.csv"
+CONFIGS_CSV="${OUTPUT_DIR}/MC_configs.csv"
+
+mkdir -p "$OUTPUT_DIR"
 
 echo "Starting performance experiments..."
 echo "Using JAR: $SPARK_APP_JAR"
@@ -19,17 +25,17 @@ echo "Using Class: $SPARK_APP_CLASS"
 #echo "memory_mb,runtime_sec" > $OUTPUT_CSV
 echo "numWalkers,numSteps,resetProb" > $CONFIGS_CSV
 
-for ((i=1; i<=10; i++)) do
+for ((i=1; i<=5; i++)) do
   echo "-----------------------------------------------------"
   echo "RUNNING EXPERIMENT with Executor Memory: $MEMORY_CONFIGS"
   echo "-----------------------------------------------------"
-  RANK_CSV="output/csv_files/MC_top_20_ranks_${i}_$MEMORY_CONFIGS.csv"
-  echo "VertexID,Rank" > $RANK_CSV
+  RANK_CSV="${OUTPUT_DIR}/MC_top_20_ranks_${i}_$MEMORY_CONFIGS.csv"
+  echo "VertexID,Rank" > "$RANK_CSV"
   log_file="MonteCarlo_run_log_${i}_$MEMORY_CONFIGS.txt"
 
   spark-submit \
     --class $SPARK_APP_CLASS \
-    --master spark://eduroam-141-23-218-205.wlan.tu-berlin.de:7077 \
+    --master spark://eduroam-141-23-203-101.wlan.tu-berlin.de:7077 \
     --name "Demo-Experiment-$MEMORY_CONFIGS" \
     --deploy-mode client \
     --driver-memory 1g \
@@ -66,7 +72,7 @@ num_walkers=$(grep "Number of walkers per node: " "$log_file" | awk -F': ' '{pri
 num_steps=$(grep "Number of steps: " "$log_file" | awk -F': ' '{print $2}')
 reset_prob=$(grep "Reset probability: " "$log_file" | awk -F': ' '{print $2}')
 
-echo "$num_walkers,$num_steps,$reset_prob" >> $CONFIGS_CSV
+echo "$num_walkers,$num_steps,$reset_prob" >> "$CONFIGS_CSV"
 echo "-----------------------------------------------------"
 echo "All experiments complete. Data saved to $OUTPUT_CSV"
-cat $OUTPUT_CSV
+#cat $OUTPUT_CSV

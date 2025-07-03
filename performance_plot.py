@@ -2,8 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 try:
-    df = pd.read_csv('output/csv_files/MonteCarlo_performance_data.csv')
-    dfGX = pd.read_csv('output/csv_files/GraphX_performance_data.csv')
+    df = pd.read_csv('output/csv_files/MC_performance_data_server.csv')
+    dfGX = pd.read_csv('output/csv_files/GX_performance_data_server.csv')
     dfConf = pd.read_csv('output/csv_files/MC_configs.csv')
 except FileNotFoundError:
     print(f"Error: The data file was not found.")
@@ -39,7 +39,7 @@ config_text = f"Num.walkers per node factor: {numWalkers}\n" \
               f"Reset probability: {resetProb}"
 
 plt.text(0.02,
-         0.87,
+         0.04,
          config_text,
          fontsize=10,
          transform=plt.gca().transAxes,
@@ -51,8 +51,8 @@ plt.ylabel('Total Runtime (seconds)')
 
 plt.grid(True)
 
-#plt.legend()
+plt.legend()
 
-output_image_file = 'output/plots/memory_vs_runtime_v4.png'
+output_image_file = 'output/plots/memory_vs_runtime_server_5_10.png'
 plt.savefig(output_image_file)
 print(f"Plot saved to '{output_image_file}'")
