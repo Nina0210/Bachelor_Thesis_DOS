@@ -47,8 +47,9 @@ object MonteCarloPageRankApp {
 
 
 
-    val spark = SparkSession.builder
+    val spark = SparkSession.builder()
       .appName("MonteCarloPageRankApp")
+      .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       // running locally
       //.master("local[*]")
       .getOrCreate()

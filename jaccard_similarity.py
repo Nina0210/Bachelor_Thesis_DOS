@@ -40,7 +40,7 @@ GX_ranks_list = csv_to_list('output/csv_files/GX_top_20_ranks_1000m.csv')
 all_values = []
 avg_and_walker_values = []
 
-for j in range(1, 6):
+for j in range(1, 11):
     print(f"Calculating average Jaccard similarity for run {j} ...")
     for i in range(1, 6):
         MC_ranks_list = csv_to_list(f'output/csv_files/run_{j}/MC_top_20_ranks_{i}_1000m.csv')
